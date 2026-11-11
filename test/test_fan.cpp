@@ -88,9 +88,10 @@ TEST_CASE_METHOD(Fixture, "fan is on, turning the light off and on quickly turns
 TEST_CASE_METHOD(Fixture, "fan is on, turning the light off and on slowly keeps fan on") {
     sim_set_light(true);
     sim_advance(4 * MIN);
-    sim_set_light(false); sim_advance(QUICK);
-    sim_set_light(true);  sim_advance(QUICK);
-    CHECK_FALSE(sim_fan_pin());
+    CHECK(sim_fan_pin());
+    sim_set_light(false); sim_advance(SLOW);
+    sim_set_light(true);  sim_advance(SLOW);
+    CHECK(sim_fan_pin());
 }
 
 TEST_CASE_METHOD(Fixture, "contact bounce is ignored") {
