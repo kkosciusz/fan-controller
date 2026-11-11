@@ -3,6 +3,7 @@
 Fan relay on PB1 (active high), light switch on PB0 (active low).
 Fan turns on after the light has been on for 3 min and stays on for 2 min
 after the light is turned off.
+Light can be toggled quickly to turn the fan on or off manually.
 
 ## Layout
 
