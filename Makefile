@@ -13,7 +13,7 @@ AVR_LDFLAGS = -mmcu=$(MCU) -Wl,--gc-sections
 AVR_SRC    = src/app.c avr/hal_avr.c avr/main.c
 AVR_OBJ    = $(addprefix build/avr/,$(AVR_SRC:.c=.o))
 
-all: test size
+all: test size hex
 
 build/avr/%.o: %.c
 	@mkdir -p $(dir $@)
@@ -25,11 +25,12 @@ build/fw.elf: $(AVR_OBJ)
 build/fw.hex: build/fw.elf
 	avr-objcopy -O ihex -R .eeprom $< $@
 
+hex: build/fw.hex
 flash: build/fw.hex
 	micronucleus --run $<
 
 size: build/fw.elf
-	avr-size -G --mcu=$(MCU) $<
+	avr-size --format=avr --mcu=$(MCU) $<
 
 # ------------------------------------------------------------- host tests
 # Set SAN= (empty) to build without sanitizers, e.g. under WSL1.
@@ -41,21 +42,21 @@ CATCH_LIBS   = $(shell pkg-config --libs catch2-with-main 2>/dev/null || echo -l
 
 build/host/%.o: %.c
 	@mkdir -p $(dir $@)
-	gcc -std=gnu11 -Wno-implicit-fallthrough $(HOST_COMMON) -c -o $@ $<
+	$(CC) -std=gnu11 -Wno-implicit-fallthrough $(HOST_COMMON) -c -o $@ $<
 
 build/host/test/test_fan.o: test/test_fan.cpp
 	@mkdir -p $(dir $@)
-	g++ -std=c++17 $(HOST_COMMON) $(CATCH_CFLAGS) -c -o $@ $<
+	$(CXX) -std=c++17 $(HOST_COMMON) $(CATCH_CFLAGS) -c -o $@ $<
 
 build/tests: build/host/test/test_fan.o $(HOST_C_OBJ)
-	g++ $(SAN) -o $@ $^ $(CATCH_LIBS)
+	$(CXX) $(SAN) -o $@ $^ $(CATCH_LIBS)
 
 test: build/tests
 	./build/tests
 
 clean:
-	rm -rf build
+	$(RM) -rf build
 
-.PHONY: all flash test clean size
+.PHONY: all flash test clean size hex
 
 -include $(AVR_OBJ:.o=.d) $(HOST_C_OBJ:.o=.d) build/host/test/test_fan.d
